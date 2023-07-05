@@ -1,0 +1,3 @@
+type,physical_error_rate,d_x,d_z,d_m,distillation_time,distillation_qubits,distillation_error,distillation_failure_prob
+15-to-1,1e-3,11,5,5,31.30,2066,8.113e-06,0.0415
+15-to-1,1e-4,5,3,3,18.05,522,4.682e-06,0.00251

@@ -1,0 +1,11 @@
+# These are dependencies that are not included in our package
+matplotlib
+pandas
+pylatexenc
+qiskit
+tqdm
+
+# Development
+black
+isort
+

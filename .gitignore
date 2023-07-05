@@ -1,0 +1,29 @@
+# IDE specific things
+.vscode/
+.devcontainer/devcontainer.json
+
+# Build artifacts
+build/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.DS_Store
+
+
+# Tests / coverage reports
+*.xml
+*.log
+
+# Data generated from tests and examples
+*.vcd
+*.png
+
+# Docker container ID
+container
+
+# Misc
+untracked/
+
+# Jupyter Notebook
+*.ipynb_checkpoints

@@ -1,0 +1,3 @@
+[submodule "magicstates"]
+	path = magicstates
+	url = git@github.com:litinski/magicstates.git
