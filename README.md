@@ -1,8 +1,6 @@
 # Supplementary material for "Compilation of a simple chemistry application to quantum error correction primitives"
 
-This repository contains code for generating results presented in the paper
-"Compilation of a simple chemistry application to quantum error correction primitives"
-by Blunt, Geher, and Moylett.
+This repository contains code for generating results presented in the paper ["Compilation of a simple chemistry application to quantum error correction primitives"](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.013325) by Blunt, Gehér, and Moylett.
 
 ## Folder structure
 
@@ -28,6 +26,10 @@ found in `environment/dev_requirements.txt`.
 A Docker container can be built with the command `make build`,
 and a shell can be started with the command `make shell`.
 
+## Citation
+
+Nick S. Blunt, György P. Gehér, and Alexandra E. Moylett, Compilation of a simple chemistry application to quantum error correction primitives, Physical Review Research 6, 013325 (2024)
+
 ## Notice
 
-(c) Copyright Riverlane 2022-2023. All rights reserved.
+(c) Copyright Riverlane 2022-2024. All rights reserved.

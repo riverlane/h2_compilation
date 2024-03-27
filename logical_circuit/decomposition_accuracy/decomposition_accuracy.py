@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 """
 Assessing decomposition accuracy of gridsynth vs number of gates

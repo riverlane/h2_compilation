@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 """
 Circuit for decomposing the H2 QPE circuit into Clifford+T gates,
@@ -299,6 +299,9 @@ def run_circ(
 
 if __name__ == "__main__":
     bits_precision = 5
+    # Hamiltonian coefficients for H2 on platinum
+    # a1 = 0.608374357020626
+    # a2 = 0.043033053231386
 
     # Hamiltonian coefficients for H2 STO-3G at equilibirum
     # geometry (internuclear distance = 0.7414 angstroms)

@@ -1,16 +1,25 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 import math
 import os
 import sys
 from collections import Counter
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas
+from matplotlib.ticker import FuncFormatter
 from qiskit import QuantumCircuit
 from scipy.optimize import brentq
 
 ERROR_BUDGET = 1e-2
+DISTANCE_SHARE = 0.5
 D_UPPER_BOUND = 1e4
+
+P_LOWER_BOUND = 1e-4
+P_UPPER_BOUND = 2.1e-3
+P_STEP = 1e-4
+ERROR_RATES = [np.round(p, 5) for p in np.arange(P_LOWER_BOUND, P_UPPER_BOUND, P_STEP)]
 
 # Number of QEC rounds per gate type in do Cliffords model.
 # Represented as tuples (a, b)
@@ -75,27 +84,13 @@ if __name__ == "__main__":
         os.path.join("resource_estimates", "factory_resources.csv")
     )
 
-    for physical_error_rate in [1e-3, 1e-4]:
-        print("physical error rate:", physical_error_rate)
+    all_num_qubits_do_cliffords = []
+    all_num_qubits_commute_cliffords = []
+    all_num_rounds_do_cliffords = []
+    all_num_rounds_commute_cliffords = []
 
-        # Load factory information.
-        factory = factory_resources.loc[
-            factory_resources["physical_error_rate"] == physical_error_rate
-        ]
-        print("    Factory type: ", factory["type"])
-        print("    Factory X distance: ", factory["d_x"])
-        print("    Factory Z distance: ", factory["d_z"])
-        print("    Factory measurement distance: ", factory["d_m"])
-        distillation_time = float(factory["distillation_time"])
-        distillation_qubits = int(factory["distillation_qubits"])
-        distillation_error = float(factory["distillation_error"])
-        print("    Distillation time:", distillation_time)
-        print("    Number of qubits for single factory:", distillation_qubits)
-        print("    Distillation error probability:", distillation_error)
-        print(
-            "    Distillation failure probability:",
-            factory["distillation_failure_prob"],
-        )
+    for physical_error_rate in ERROR_RATES:
+        print("physical error rate:", physical_error_rate)
 
         def error_rate_given_distance_do_cliffords(distance):
             return (
@@ -106,7 +101,7 @@ if __name__ == "__main__":
                     physical_error_rate=physical_error_rate,
                     d=distance,
                 )
-                - ERROR_BUDGET
+                - DISTANCE_SHARE * ERROR_BUDGET
             )
 
         def error_rate_given_distance_commute_cliffords(distance):
@@ -118,9 +113,10 @@ if __name__ == "__main__":
                     physical_error_rate=physical_error_rate,
                     d=distance,
                 )
-                - ERROR_BUDGET
+                - DISTANCE_SHARE * ERROR_BUDGET
             )
 
+        print("    Do Cliffords model")
         # Do Cliffords resource estimates.
         # Find distance to get error rate within budget.
         distance_do_cliffords = math.ceil(
@@ -144,10 +140,31 @@ if __name__ == "__main__":
 
         # T gate error budget estimated by remaining error budget divided by
         # number of T gates.
-        t_error_do_cliffords = (ERROR_BUDGET - data_error_do_cliffords) / gates[
-            "t_like"
-        ]
-        print("    Do Cliffords model")
+        t_error_do_cliffords = ((1 - DISTANCE_SHARE) * ERROR_BUDGET) / gates["t_like"]
+
+        # Load factory information.
+        factory = (
+            factory_resources[
+                (factory_resources["physical_error_rate"] >= physical_error_rate)
+                & (factory_resources["distillation_error"] <= t_error_do_cliffords)
+            ]
+            .sort_values(by=["d_x", "d_z", "d_m"])
+            .head(1)
+        )
+        print("    Factory type: ", factory["type"])
+        print("    Factory X distance: ", factory["d_x"])
+        print("    Factory Z distance: ", factory["d_z"])
+        print("    Factory measurement distance: ", factory["d_m"])
+        distillation_time = float(factory["distillation_time"])
+        distillation_qubits = int(factory["distillation_qubits"])
+        distillation_error = float(factory["distillation_error"])
+        print("    Distillation time:", distillation_time)
+        print("    Number of qubits for single factory:", distillation_qubits)
+        print("    Distillation error probability:", distillation_error)
+        print(
+            "    Distillation failure probability:",
+            factory["distillation_failure_prob"],
+        )
         for num_factories in range(1, 5):
             # Find number of factories required to generate T states at desired rate.
             if distillation_time / num_factories <= num_rounds_per_t_state_do_cliffords:
@@ -218,7 +235,10 @@ if __name__ == "__main__":
             "        total error:",
             data_error_do_cliffords + distillation_error * gates["t_like"],
         )
+        all_num_qubits_do_cliffords.append(total_physical_qubits_do_cliffords)
+        all_num_rounds_do_cliffords.append(num_rounds_do_cliffords)
 
+        print("    Commute Cliffords model")
         # Litinski resource estimates.
         # Find distance to get error rate within budget.
         distance_commute_cliffords = math.ceil(
@@ -246,10 +266,33 @@ if __name__ == "__main__":
 
         # T gate error budget estimated by remaining error budget divided by
         # number of T gates.
-        t_error_commute_cliffords = (
-            ERROR_BUDGET - data_error_commute_cliffords
-        ) / gates["t_like"]
-        print("    Commute Cliffords model")
+        t_error_commute_cliffords = ((1 - DISTANCE_SHARE) * ERROR_BUDGET) / gates[
+            "t_like"
+        ]
+
+        # Load factory information.
+        factory = (
+            factory_resources[
+                (factory_resources["physical_error_rate"] >= physical_error_rate)
+                & (factory_resources["distillation_error"] <= t_error_commute_cliffords)
+            ]
+            .sort_values(by=["d_x", "d_z", "d_m"])
+            .head(1)
+        )
+        print("    Factory type: ", factory["type"])
+        print("    Factory X distance: ", factory["d_x"])
+        print("    Factory Z distance: ", factory["d_z"])
+        print("    Factory measurement distance: ", factory["d_m"])
+        distillation_time = float(factory["distillation_time"])
+        distillation_qubits = int(factory["distillation_qubits"])
+        distillation_error = float(factory["distillation_error"])
+        print("    Distillation time:", distillation_time)
+        print("    Number of qubits for single factory:", distillation_qubits)
+        print("    Distillation error probability:", distillation_error)
+        print(
+            "    Distillation failure probability:",
+            factory["distillation_failure_prob"],
+        )
         for num_factories in range(1, 5):
             # Find number of factories required to generate T states at desired rate.
             if (
@@ -331,3 +374,76 @@ if __name__ == "__main__":
             "        total error:",
             data_error_commute_cliffords + distillation_error * gates["t_like"],
         )
+        all_num_qubits_commute_cliffords.append(total_physical_qubits_commute_cliffords)
+        all_num_rounds_commute_cliffords.append(num_rounds_commute_cliffords)
+
+    def scale_x_ticks(x, pos):
+        return 1000 * x
+
+    for i in range(len(ERROR_RATES) - 1, 1, -1):
+        # Simple optimisation: if a higher-error arrangement has fewer qubits
+        # and fewer rounds than a lower-error arrangement, use that one instead.
+        if (
+            all_num_qubits_do_cliffords[i] < all_num_qubits_do_cliffords[i - 1]
+            and all_num_rounds_do_cliffords[i] < all_num_rounds_do_cliffords[i - 1]
+        ):
+            all_num_qubits_do_cliffords[i - 1] = all_num_qubits_do_cliffords[i]
+            all_num_rounds_do_cliffords[i - 1] = all_num_rounds_do_cliffords[i]
+        if (
+            all_num_qubits_commute_cliffords[i]
+            < all_num_qubits_commute_cliffords[i - 1]
+            and all_num_rounds_commute_cliffords[i]
+            < all_num_rounds_commute_cliffords[i - 1]
+        ):
+            all_num_qubits_commute_cliffords[i - 1] = all_num_qubits_commute_cliffords[
+                i
+            ]
+            all_num_rounds_commute_cliffords[i - 1] = all_num_rounds_commute_cliffords[
+                i
+            ]
+
+    qubits_fig = plt.figure()
+    qubits_ax = qubits_fig.add_subplot(1, 1, 1)
+    qubits_ax.plot(
+        ERROR_RATES,
+        all_num_qubits_do_cliffords,
+        color="#006f62",
+        label="Direct implementation",
+        marker='.',
+    )
+    qubits_ax.plot(
+        ERROR_RATES,
+        all_num_qubits_commute_cliffords,
+        color="#3ccbda",
+        label="Move Cliffords",
+        marker='.',
+    )
+    qubits_ax.legend()
+    qubits_ax.xaxis.set_major_formatter(FuncFormatter(scale_x_ticks))
+    qubits_ax.set_xlabel(r"Physical error rate $(10^{-3})$")
+    qubits_ax.set_ylabel("Number of physical qubits")
+    qubits_fig.savefig("num_qubits.png")
+    qubits_fig.savefig("num_qubits.pdf")
+
+    rounds_fig = plt.figure()
+    rounds_ax = rounds_fig.add_subplot(1, 1, 1)
+    rounds_ax.plot(
+        ERROR_RATES,
+        all_num_rounds_do_cliffords,
+        color="#006f62",
+        label="Direct implementation",
+        marker='.',
+    )
+    rounds_ax.plot(
+        ERROR_RATES,
+        all_num_rounds_commute_cliffords,
+        color="#3ccbda",
+        label="Move Cliffords",
+        marker='.',
+    )
+    rounds_ax.legend()
+    rounds_ax.xaxis.set_major_formatter(FuncFormatter(scale_x_ticks))
+    rounds_ax.set_xlabel(r"Physical error rate $(10^{-3})$")
+    rounds_ax.set_ylabel("Number of QEC rounds")
+    rounds_fig.savefig("num_rounds.png")
+    rounds_fig.savefig("num_rounds.pdf")

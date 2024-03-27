@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 # Count the number of times a Pauli product is applied.
 

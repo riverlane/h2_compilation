@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 """
 For each condition count the number of operations (measurements and rotations)

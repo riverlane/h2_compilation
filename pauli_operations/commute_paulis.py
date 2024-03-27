@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 # Takes a file of Pauli product rotations and
 # commutes the Clifford operations to after the measurements.

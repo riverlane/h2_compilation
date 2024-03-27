@@ -1,4 +1,4 @@
-# (c) Copyright Riverlane 2022-2023. All rights reserved.
+# (c) Copyright Riverlane 2022-2024. All rights reserved.
 
 import sys
 from typing import Dict, List, TextIO, Tuple
@@ -244,7 +244,9 @@ if __name__ == "__main__":
             next(qasm_file)
             next(qasm_file)
         next(qasm_file)
-        with open(f"{'.'.join(sys.argv[1].split('.')[:-1])}_paulis.csv", "w") as pauli_file:
+        with open(
+            f"{'.'.join(sys.argv[1].split('.')[:-1])}_paulis.csv", "w"
+        ) as pauli_file:
             for line in qasm_file:
                 if line.startswith("qreg"):
                     num_qubits = get_index(line)
